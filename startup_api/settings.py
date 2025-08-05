@@ -1,3 +1,5 @@
+import os
+import dj_database_url
 """
 Django settings for startup_api project.
 
@@ -155,7 +157,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoise compression and cache
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEBUG = False
-import dj_database_url
+
 DATABASES = {
     'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
