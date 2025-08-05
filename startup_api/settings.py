@@ -135,7 +135,7 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'users.CustomUser'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Local Dev
-    "https://your-frontend.vercel.app",  # ✅ Vercel Frontend URL
+    "https://start-up-ms.vercel.app/",  # ✅ Vercel Frontend URL
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -155,3 +155,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoise compression and cache
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEBUG = False
+import dj_database_url
+DATABASES = {
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
+}
