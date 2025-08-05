@@ -137,7 +137,7 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'users.CustomUser'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Local Dev
-    "https://start-up-ms.vercel.app/",  # ✅ Vercel Frontend URL
+     "https://start-up-ms.vercel.app",  # ✅ Vercel Frontend URL
 ]
 
 CORS_ALLOW_HEADERS = [
