@@ -11,8 +11,8 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    'your-render-app.onrender.com',  # Replace with your Render domain
-    'your-vercel-app.vercel.app',    # Replace with your Vercel domain
+    'https://backend-ug9v.onrender.com',  # Replace with your Render domain
+    'https://start-up-ms.vercel.app',    # Replace with your Vercel domain
 ]
 
 INSTALLED_APPS = [
