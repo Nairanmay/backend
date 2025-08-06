@@ -108,3 +108,7 @@ CSRF_TRUSTED_ORIGINS = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://your-frontend.vercel.app",
+]
