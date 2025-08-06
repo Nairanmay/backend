@@ -123,3 +123,9 @@ if DATABASE_URL:
         conn_max_age=600,
         ssl_require=True
     )
+    ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'https://backend-ug9v.onrender.com',  # Render backend
+    'https://start-up-ms.vercel.app/'         # Vercel frontend
+]
