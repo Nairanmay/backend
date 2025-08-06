@@ -12,9 +12,9 @@ class CustomUser(AbstractUser):
     company_code = models.CharField(max_length=12, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        # If role is admin and no company_code, generate one
+        # Auto-generate company code if admin and not provided
         if self.role == 'admin' and not self.company_code:
-            self.company_code = str(uuid.uuid4())[:8].upper()  # e.g., 'A1B2C3D4'
+            self.company_code = str(uuid.uuid4())[:8].upper()  # Example: A1B2C3D4
         super().save(*args, **kwargs)
 
     def __str__(self):

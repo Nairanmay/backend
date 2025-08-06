@@ -1,31 +1,30 @@
 from rest_framework import serializers
 from .models import CustomUser, Task
 
-
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    company_code = serializers.CharField(required=False, allow_blank=True)
+    password1 = serializers.CharField(write_only=True)
+    password2 = serializers.CharField(write_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'password', 'role', 'company_code']
+        fields = ['id', 'username', 'email', 'password1', 'password2', 'role', 'company_code']
+
+    def validate(self, data):
+        if data['password1'] != data['password2']:
+            raise serializers.ValidationError({"password": "Passwords do not match"})
+        return data
 
     def create(self, validated_data):
-        company_code = validated_data.pop('company_code', None)
+        password = validated_data.pop('password1')
+        validated_data.pop('password2')
         user = CustomUser.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=validated_data['password'],
-            role=validated_data.get('role', 'user')
+            password=password,
+            role=validated_data.get('role', 'user'),
+            company_code=validated_data.get('company_code', None)
         )
-
-        # ✅ Optional: Handle company code logic
-        if company_code:
-            # Save company_code somewhere or validate it
-            pass
-
         return user
-
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
