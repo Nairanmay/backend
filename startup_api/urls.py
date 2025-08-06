@@ -24,24 +24,23 @@ from django.contrib import admin
 from django.urls import path
 from django.http import JsonResponse
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from users.views import RegisterView, UserView
-
-# Simple home view for API root
-from django.contrib import admin
-from django.urls import path
-from django.http import JsonResponse
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from users.views import RegisterView, UserView
+from users.views import RegisterView, UserView, AssignTaskView, TaskListView
 
 # Simple root view
 def home(request):
     return JsonResponse({"message": "API is running"})
 
 urlpatterns = [
-    path('', home),  # ✅ Home route
+    path('', home),  # ✅ API Health Check
     path('admin/', admin.site.urls),
+
+    # ✅ Auth Routes
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/login/', TokenObtainPairView.as_view(), name='login'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/user/', UserView.as_view(), name='user'),
+
+    # ✅ Task Management
+    path('tasks/assign/', AssignTaskView.as_view(), name='assign-task'),
+    path('tasks/', TaskListView.as_view(), name='task-list'),
 ]
