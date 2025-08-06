@@ -14,17 +14,20 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Passwords do not match"})
         return data
 
-    def create(self, validated_data):
+  def create(self, validated_data):
         password = validated_data.pop('password1')
         validated_data.pop('password2')
+
+        # ✅ Use create_user (automatically hashes password)
         user = CustomUser.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=password,
+            password=password,  # ✅ password is hashed internally
             role=validated_data.get('role', 'user'),
             company_code=validated_data.get('company_code', None)
         )
         return user
+    
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

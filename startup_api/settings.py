@@ -103,3 +103,6 @@ CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in dev (safe because of JWT a
 CSRF_TRUSTED_ORIGINS = [
     'https://backend-ug9v.onrender.com'
 ]
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
