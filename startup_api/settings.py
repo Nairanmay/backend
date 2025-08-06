@@ -11,8 +11,8 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    'https://backend-ug9v.onrender.com',  # Replace with your Render domain
-    'https://start-up-ms.vercel.app',    # Replace with your Vercel domain
+    'backend-ug9v.onrender.com',  # Replace with your Render domain
+    'start-up-ms.vercel.app',    # Replace with your Vercel domain
 ]
 
 INSTALLED_APPS = [
@@ -100,3 +100,6 @@ REST_FRAMEWORK = {
 
 # ✅ CORS Settings
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in dev (safe because of JWT auth)
+CSRF_TRUSTED_ORIGINS = [
+    'https://backend-ug9v.onrender.com'
+]
