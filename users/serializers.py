@@ -10,33 +10,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['id', 'username', 'email', 'password', 'role', 'company_code']
 
-    def validate(self, data):
-        role = data.get('role', 'user')
-
-        if role == 'user' and not data.get('company_code'):
-            raise serializers.ValidationError({"company_code": "Company code is required for users."})
-
-        return data
-
     def create(self, validated_data):
-        company_code = validated_data.get('company_code', None)
-        role = validated_data.get('role', 'user')
-
-        # Create user
+        company_code = validated_data.pop('company_code', None)
         user = CustomUser.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password'],
-            role=role
+            role=validated_data.get('role', 'user')
         )
 
-        # If user is admin, company_code will auto-generate in model's save()
-        if role == 'admin':
-            user.save()
-        else:
-            # If user, assign the provided company_code
-            user.company_code = company_code
-            user.save()
+        # ✅ Optional: Handle company code logic
+        if company_code:
+            # Save company_code somewhere or validate it
+            pass
 
         return user
 
