@@ -1,8 +1,11 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from .models import CustomUser, Task
 from .serializers import RegisterSerializer, UserSerializer, TaskSerializer
+
+# ✅ Registration View
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = RegisterSerializer
@@ -10,20 +13,25 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            print("Validation Errors:", serializer.errors)  # ✅ Debug here
+            print("Validation Errors:", serializer.errors)  # Debug
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+# ✅ Get Current User Info
 class UserView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+
+# ✅ Assign Task (Admin Only)
 class AssignTaskView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request):
         user = request.user
         if user.role != 'admin':
@@ -47,8 +55,11 @@ class AssignTaskView(APIView):
         )
         return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
 
+
+# ✅ Get Tasks (Admin sees all company tasks, User sees assigned tasks)
 class TaskListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request):
         user = request.user
         if user.role == 'admin':

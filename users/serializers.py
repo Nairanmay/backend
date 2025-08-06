@@ -14,7 +14,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Passwords do not match"})
         return data
 
-    def create(self, validated_data):   # <-- INDENTATION ISSUE HERE
+    def create(self, validated_data):  # ✅ Properly indented inside class
         password = validated_data.pop('password1')
         validated_data.pop('password2')
         user = CustomUser.objects.create_user(
@@ -25,6 +25,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             company_code=validated_data.get('company_code', None)
         )
         return user
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
