@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 import uuid
-
+from django.conf import settings
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
@@ -31,3 +31,10 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{self.title} -> {self.assigned_to.username}"
+class RefreshToken(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='refresh_token')
+    token = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"RefreshToken for {self.user.username}"

@@ -4,7 +4,9 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .models import CustomUser, Task
 from .serializers import RegisterSerializer, UserSerializer, TaskSerializer
-
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import RefreshToken
 
 # ✅ Registration View
 class RegisterView(generics.CreateAPIView):
@@ -84,3 +86,22 @@ class TaskListView(APIView):
         else:
             tasks = Task.objects.filter(assigned_to=user)
         return Response(TaskSerializer(tasks, many=True).data, status=status.HTTP_200_OK)
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        user = self.user
+        refresh = data['refresh']
+
+        RefreshToken.objects.update_or_create(
+            user=user,
+            defaults={'token': refresh}
+        )
+
+        return data
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

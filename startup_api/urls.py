@@ -9,13 +9,16 @@ from users.views import (
     TaskListView,
     CompanyUsersView,  # <-- You'll create this in views.py
 )
-
+from users.views import CustomTokenObtainPairView
+from rest_framework_simplejwt.views import TokenRefreshView
 def home(request):
     return JsonResponse({"message": "API is running"})
 
 urlpatterns = [
     path('', home),
-    path('admin/', admin.site.urls),
+   path('admin/', admin.site.urls),
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # Auth
     path('auth/register/', RegisterView.as_view(), name='register'),
