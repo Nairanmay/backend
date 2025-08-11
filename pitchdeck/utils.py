@@ -3,6 +3,7 @@ import fitz  # PyMuPDF
 import google.generativeai as genai
 import json
 from dotenv import load_dotenv
+import re
 
 # ✅ Load environment variables from .env
 load_dotenv()
@@ -29,7 +30,6 @@ def extract_text_from_pdf(pdf_file):
 
 
 def analyze_with_gemini(text):
-    """Send extracted text to Google Gemini for analysis."""
     prompt = f"""
     You are a startup pitch deck analyzer. Analyze the following pitch deck text:
     {text}
@@ -44,14 +44,16 @@ def analyze_with_gemini(text):
     summary, strengths, weaknesses, ratings, suggestions
     """
 
-    # ✅ Updated model name
     model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
     response = model.generate_content(prompt)
 
+    print("Raw AI output:", response.text)  # For debugging
+
+    # Extract JSON from response text
     try:
-        # Ensure the output is valid JSON
-        result = json.loads(response.text)
-    except json.JSONDecodeError:
-        result = {"error": "Invalid JSON from AI", "raw_output": response.text}
+        json_str = re.search(r"\{.*\}", response.text, re.DOTALL).group()
+        result = json.loads(json_str)
+    except Exception as e:
+        result = {"error": "Failed to parse JSON from AI output", "raw_output": response.text}
 
     return result
