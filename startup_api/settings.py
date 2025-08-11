@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'users',  # Your custom app
+     'pitchdeck', 
 ]
 
 MIDDLEWARE = [
@@ -141,3 +142,5 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from django.http import JsonResponse
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.urls import path, include
 from users.views import (
     RegisterView,
     UserView,
@@ -35,4 +36,8 @@ urlpatterns = [
     # Manage Users by Company Code
     path('users/company/<str:company_code>/', CompanyUsersView.as_view(), name='company_users'),
  path('users/delete/<int:user_id>/', DeleteUserView.as_view(), name='delete-user'),
+
+ # Pitch Deck Upload
+
+    path('api/pitchdeck/', include('pitchdeck.urls')),
 ]
