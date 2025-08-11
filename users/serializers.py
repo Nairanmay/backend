@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import CustomUser, Task
 
+
+# ✅ Registration Serializer
 class RegisterSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
@@ -14,7 +16,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Passwords do not match"})
         return data
 
-    def create(self, validated_data):  # ✅ Properly indented inside class
+    def create(self, validated_data):
         password = validated_data.pop('password1')
         validated_data.pop('password2')
         user = CustomUser.objects.create_user(
@@ -27,15 +29,17 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
+# ✅ User Serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email', 'role', 'company_code']
 
 
+# ✅ Task Serializer
 class TaskSerializer(serializers.ModelSerializer):
-    assigned_to = serializers.CharField(source='assigned_to.username', read_only=True)
-    created_by = serializers.CharField(source='created_by.username', read_only=True)
+    assigned_to = UserSerializer(read_only=True)  # Full user object
+    created_by = UserSerializer(read_only=True)
 
     class Meta:
         model = Task

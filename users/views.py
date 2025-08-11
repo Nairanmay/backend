@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -20,7 +20,7 @@ class RegisterView(generics.CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# ✅ Get Current User Info
+# ✅ Get Current Logged-in User Info
 class UserView(APIView):
     permission_classes = [IsAuthenticated]
 
