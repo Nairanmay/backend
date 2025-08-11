@@ -29,6 +29,9 @@ def extract_text_from_pdf(pdf_file):
     return text
 
 
+import json
+import re
+
 def analyze_with_gemini(text):
     prompt = f"""
     You are a startup pitch deck analyzer. Analyze the following pitch deck text:
@@ -45,12 +48,22 @@ def analyze_with_gemini(text):
     """
     model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
     response = model.generate_content(prompt)
+    print("Raw AI output:", response.text)
 
-    print("Raw AI output:", response.text)  # Add this debug
-
+    # Try to extract the first JSON object from the response text
     try:
-        result = json.loads(response.text)
-    except json.JSONDecodeError:
-        result = {"error": "Invalid JSON from AI", "raw_output": response.text}
+        # Find first balanced JSON substring using regex or a parser lib (like demjson)
+        json_str = re.search(r"\{(?:[^{}]|(?R))*\}", response.text, re.DOTALL).group()
+        result = json.loads(json_str)
+    except Exception as e:
+        # Fallback: just return raw text as a summary
+        result = {
+            "summary": response.text,
+            "strengths": [],
+            "weaknesses": [],
+            "ratings": {},
+            "suggestions": [],
+            "error": f"Failed to parse JSON: {str(e)}"
+        }
 
     return result
