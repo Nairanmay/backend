@@ -21,7 +21,8 @@ urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/login/', TokenObtainPairView.as_view(), name='login'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('auth/user/', UserView.as_view(), name='user'),
+   path('api/company-users/', CompanyUsersView.as_view(), name='company-users'),
+
 
     # Tasks
     path('tasks/assign/', AssignTaskView.as_view(), name='assign-task'),
