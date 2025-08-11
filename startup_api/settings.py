@@ -1,13 +1,14 @@
 import os
 from pathlib import Path
 import dj_database_url
-
+from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-secret-key')
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback_secret")
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',

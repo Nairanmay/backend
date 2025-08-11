@@ -2,9 +2,22 @@ import os
 import fitz  # PyMuPDF
 import google.generativeai as genai
 import json
+from dotenv import load_dotenv
+
+# ✅ Load environment variables from .env
+load_dotenv()
 
 # ✅ Configure Gemini API key
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    raise ValueError(
+        "❌ GEMINI_API_KEY is not set. Please add it to your .env file.\n"
+        "Example: GEMINI_API_KEY=your_api_key_here"
+    )
+
+genai.configure(api_key=GEMINI_API_KEY)
+
 
 def extract_text_from_pdf(pdf_file):
     """Extract all text from PDF using PyMuPDF."""
@@ -13,6 +26,7 @@ def extract_text_from_pdf(pdf_file):
         for page in doc:
             text += page.get_text()
     return text
+
 
 def analyze_with_gemini(text):
     """Send extracted text to Google Gemini for analysis."""
@@ -30,7 +44,8 @@ def analyze_with_gemini(text):
     summary, strengths, weaknesses, ratings, suggestions
     """
 
-    model = genai.GenerativeModel("gemini-pro")
+    # ✅ Updated model name
+    model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
     response = model.generate_content(prompt)
 
     try:

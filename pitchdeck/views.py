@@ -1,26 +1,31 @@
-from django.http import JsonResponse
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.http import JsonResponse
 from .utils import extract_text_from_pdf, analyze_with_gemini
 from .models import PitchDeckAnalysis
-from .serializers import PitchDeckAnalysisSerializer
+from .serializers import PitchDeckAnalysisSerializer  # <--- Add this line
 
 class PitchDeckAnalysisView(APIView):
+    permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, *args, **kwargs):
+        if request.user.role != "admin":
+            return Response({"error": "Only admins can upload pitch decks."}, status=status.HTTP_403_FORBIDDEN)
+
         pdf_file = request.FILES.get("file")
         if not pdf_file:
             return JsonResponse({"error": "No PDF file uploaded"}, status=400)
 
         try:
-            # Extract and analyze
             text = extract_text_from_pdf(pdf_file)
             analysis_result = analyze_with_gemini(text)
 
-            # Save to DB
             pitch = PitchDeckAnalysis.objects.create(
-                user=request.user if request.user.is_authenticated else None,
+                user=request.user,
                 file=pdf_file,
                 analysis_text=analysis_result.get("summary", ""),
                 ratings=analysis_result.get("ratings", {}),
