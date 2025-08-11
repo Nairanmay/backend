@@ -6,6 +6,8 @@ from .models import CustomUser, Task, RefreshToken
 from .serializers import RegisterSerializer, UserSerializer, TaskSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import generics, permissions
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 # Registration View
 class RegisterView(generics.CreateAPIView):
@@ -113,3 +115,20 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+class UserDetailView(generics.RetrieveDestroyAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAdminUser]  # Or your custom admin check
+
+class DeleteUserView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def delete(self, request, user_id):
+        try:
+            user_to_delete = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user_to_delete.delete()
+        return Response({"message": "User deleted successfully."}, status=status.HTTP_200_OK)

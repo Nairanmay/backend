@@ -10,6 +10,8 @@ from users.views import (
     CompanyUsersView,  # <-- You'll create this in views.py
 )
 from users.views import CustomTokenObtainPairView
+from users.views import DeleteUserView
+
 from rest_framework_simplejwt.views import TokenRefreshView
 def home(request):
     return JsonResponse({"message": "API is running"})
@@ -32,5 +34,5 @@ urlpatterns = [
 
     # Manage Users by Company Code
     path('users/company/<str:company_code>/', CompanyUsersView.as_view(), name='company_users'),
-
+ path('users/delete/<int:user_id>/', DeleteUserView.as_view(), name='delete-user'),
 ]
