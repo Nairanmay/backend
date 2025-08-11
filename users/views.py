@@ -8,7 +8,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import generics, permissions
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-
+from .permission import IsRoleAdmin
 # Registration View
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -122,8 +122,7 @@ class UserDetailView(generics.RetrieveDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminUser]  # Or your custom admin check
 
 class DeleteUserView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-
+    permission_classes = [IsAuthenticated, IsRoleAdmin]
     def delete(self, request, user_id):
         try:
             user_to_delete = CustomUser.objects.get(id=user_id)
