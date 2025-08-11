@@ -43,17 +43,14 @@ def analyze_with_gemini(text):
     Format the result in JSON with keys:
     summary, strengths, weaknesses, ratings, suggestions
     """
-
     model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
     response = model.generate_content(prompt)
 
-    print("Raw AI output:", response.text)  # For debugging
+    print("Raw AI output:", response.text)  # Add this debug
 
-    # Extract JSON from response text
     try:
-        json_str = re.search(r"\{.*\}", response.text, re.DOTALL).group()
-        result = json.loads(json_str)
-    except Exception as e:
-        result = {"error": "Failed to parse JSON from AI output", "raw_output": response.text}
+        result = json.loads(response.text)
+    except json.JSONDecodeError:
+        result = {"error": "Invalid JSON from AI", "raw_output": response.text}
 
     return result
