@@ -102,8 +102,8 @@ REST_FRAMEWORK = {
 # ✅ CORS Settings
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in dev (safe because of JWT auth)
 CSRF_TRUSTED_ORIGINS = [
-    'https://backend-ug9v.onrender.com'
-    'https://start-up-ms.vercel.app/'
+    'https://backend-ug9v.onrender.com',
+    'https://start-up-ms.vercel.app',
 ]
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
