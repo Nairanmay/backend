@@ -34,13 +34,16 @@ class UserView(APIView):
 class CompanyUsersView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request, company_code):  # Accept company_code param
         user = request.user
         if user.role != "admin":
             return Response({"error": "Only admins can view company users."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Filter users by admin's company_code
-        users = CustomUser.objects.filter(company_code=user.company_code)
+        # Optionally, verify user.company_code matches company_code, or restrict as needed
+        if user.company_code != company_code:
+            return Response({"error": "You can only view users of your own company."}, status=status.HTTP_403_FORBIDDEN)
+
+        users = CustomUser.objects.filter(company_code=company_code)
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

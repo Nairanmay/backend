@@ -31,5 +31,6 @@ urlpatterns = [
     path('tasks/', TaskListView.as_view(), name='task-list'),
 
     # Manage Users by Company Code
-    path('users/company/<str:company_code>/', CompanyUsersView.as_view(), name='company-users'),
+    path('users/company/<str:company_code>/', CompanyUsersView.as_view(), name='company_users'),
+
 ]
