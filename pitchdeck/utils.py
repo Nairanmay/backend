@@ -50,15 +50,19 @@ def analyze_with_gemini(text):
     response = model.generate_content(prompt)
     print("Raw AI output:", response.text)
 
-    # Try to extract the first JSON object from the response text
+    # Clean markdown code blocks if present
+    cleaned_text = re.sub(r"```json|```", "", response.text).strip()
+
     try:
-        # Find first balanced JSON substring using regex or a parser lib (like demjson)
-        json_str = re.search(r"\{(?:[^{}]|(?R))*\}", response.text, re.DOTALL).group()
-        result = json.loads(json_str)
+        match = re.search(r"\{.*\}", cleaned_text, re.DOTALL)
+        if match:
+            json_str = match.group()
+            result = json.loads(json_str)
+        else:
+            raise ValueError("No JSON object found in AI response")
     except Exception as e:
-        # Fallback: just return raw text as a summary
         result = {
-            "summary": response.text,
+            "summary": cleaned_text,
             "strengths": [],
             "weaknesses": [],
             "ratings": {},
