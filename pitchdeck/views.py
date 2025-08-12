@@ -13,11 +13,16 @@ class PitchDeckAnalysisView(APIView):
 
     def post(self, request, *args, **kwargs):
         if not hasattr(request.user, "role") or request.user.role != "admin":
-            return Response({"error": "Only admins can upload pitch decks."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "Only admins can upload pitch decks."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         pdf_file = request.FILES.get("file")
         if not pdf_file:
-            return Response({"error": "No PDF file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "No PDF file uploaded"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             text = extract_text_from_pdf(pdf_file)
@@ -28,6 +33,9 @@ class PitchDeckAnalysisView(APIView):
                 user=request.user,
                 file=pdf_file,
                 analysis_text=analysis_result.get("summary", ""),
+                strengths=analysis_result.get("strengths", []),
+                weaknesses=analysis_result.get("weaknesses", []),
+                suggestions=analysis_result.get("suggestions", []),
                 ratings=analysis_result.get("ratings", {}),
                 chart_data={},  # Adjust as needed
             )

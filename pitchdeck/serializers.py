@@ -5,6 +5,15 @@ class PitchDeckAnalysisSerializer(serializers.ModelSerializer):
     class Meta:
         model = PitchDeckAnalysis
         fields = '__all__'
-        read_only_fields = ['user', 'analysis_text', 'ratings', 'chart_data', 'created_at']
+        read_only_fields = [
+            'user',
+            'analysis_text',
+            'ratings',
+            'chart_data',
+            'strengths',
+            'weaknesses',
+            'suggestions',
+            'created_at',
+        ]
 class PitchDeckUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
