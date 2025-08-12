@@ -114,7 +114,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "https://your-frontend.vercel.app",
+      "https://start-up-ms.vercel.app",
 ]
 CORS_ALLOW_METHODS = [
     "DELETE",
