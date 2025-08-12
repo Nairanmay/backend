@@ -34,18 +34,22 @@ import re
 
 def analyze_with_gemini(text):
     prompt = f"""
-    You are a startup pitch deck analyzer. Analyze the following pitch deck text:
-    {text}
+You are a startup pitch deck analyzer. Analyze the following pitch deck text strictly.
 
-    Provide:
-    1. A clear summary.
-    2. Strengths & weaknesses.
-    3. Ratings (market potential, team strength, clarity) from 1-10.
-    4. Suggestions for improvement.
+Provide ONLY a JSON object with the following keys (no extra text or explanation):
 
-    Format the result in JSON with keys:
-    summary, strengths, weaknesses, ratings, suggestions
-    """
+1. summary (string): A clear and concise summary.
+2. strengths (array of strings): List key strengths.
+3. weaknesses (array of strings): List key weaknesses.
+4. ratings (object): Ratings on a scale of 1-10 with keys: market_potential, team_strength, clarity.
+5. suggestions (array of strings): Concrete suggestions for improvement.
+
+Pitch Deck Text:
+\"\"\"
+{text}
+\"\"\"
+"""
+
     model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
     response = model.generate_content(prompt)
     print("Raw AI output:", response.text)
@@ -58,14 +62,32 @@ def analyze_with_gemini(text):
         if match:
             json_str = match.group()
             result = json.loads(json_str)
+
+            # Ensure keys exist and have defaults if missing
+            result.setdefault("summary", "")
+            result.setdefault("strengths", [])
+            result.setdefault("weaknesses", [])
+            result.setdefault("ratings", {
+                "market_potential": 0,
+                "team_strength": 0,
+                "clarity": 0,
+            })
+            result.setdefault("suggestions", [])
+
         else:
             raise ValueError("No JSON object found in AI response")
+
     except Exception as e:
+        print("JSON parse error:", str(e))
         result = {
             "summary": cleaned_text,
             "strengths": [],
             "weaknesses": [],
-            "ratings": {},
+            "ratings": {
+                "market_potential": 0,
+                "team_strength": 0,
+                "clarity": 0,
+            },
             "suggestions": [],
             "error": f"Failed to parse JSON: {str(e)}"
         }
