@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'users',  # Your custom app
      'pitchdeck', 
+     'funding_suggestor',
+
 ]
 
 MIDDLEWARE = [

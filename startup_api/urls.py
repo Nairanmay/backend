@@ -40,4 +40,7 @@ urlpatterns = [
  # Pitch Deck Upload
 
     path('api/pitchdeck/', include('pitchdeck.urls')),
+
+    # Funding Suggestor
+     path('api/funding/', include('funding_suggestor.urls')),
 ]
