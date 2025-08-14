@@ -12,7 +12,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
 
-
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.none()  # just to satisfy DRF router
     serializer_class = TaskSerializer
@@ -20,8 +19,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Task.objects.filter(assigned_to=user)
-    
+        # Only return tasks that are not completed
+        return Task.objects.filter(assigned_to=user).exclude(status__iexact="Completed")
     def perform_create(self, serializer):
         # Save task with assigned users
         task = serializer.save()
