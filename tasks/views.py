@@ -14,14 +14,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.none()  # just to satisfy DRF router
+    queryset = Task.objects.all()  # <— important for delete
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
-
+    
     def get_queryset(self):
         user = self.request.user
         return Task.objects.filter(assigned_to=user)
-    
     def perform_create(self, serializer):
         # Save task with assigned users
         task = serializer.save()
