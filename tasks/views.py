@@ -21,23 +21,23 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Save task with assigned users
         task = serializer.save()
-        # Send email notifications to assigned users
-        emails = [user.email for user in task.assigned_to.all()]
-        if emails:
-            send_mail(
-                subject=f"New Task Assigned: {task.project.name}",
-                message=f"You have been assigned a new task: {task.description}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=emails,
-            )
+    #     # Send email notifications to assigned users
+    #     emails = [user.email for user in task.assigned_to.all()]
+    #     if emails:
+    #         send_mail(
+    #             subject=f"New Task Assigned: {task.project.name}",
+    #             message=f"You have been assigned a new task: {task.description}",
+    #             from_email=settings.DEFAULT_FROM_EMAIL,
+    #             recipient_list=emails,
+    #         )
 
-    def perform_update(self, serializer):
-        task = serializer.save()
-        # Notify admin if task is completed
-        if task.status.lower() == "completed":
-            send_mail(
-                subject=f"Task Completed: {task.project.name}",
-                message=f"The task '{task.description}' has been completed.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.ADMIN_EMAIL],
-            )
+    # def perform_update(self, serializer):
+    #     task = serializer.save()
+    #     # Notify admin if task is completed
+    #     if task.status.lower() == "completed":
+    #         send_mail(
+    #             subject=f"Task Completed: {task.project.name}",
+    #             message=f"The task '{task.description}' has been completed.",
+    #             from_email=settings.DEFAULT_FROM_EMAIL,
+    #             recipient_list=[settings.ADMIN_EMAIL],
+    #         )
