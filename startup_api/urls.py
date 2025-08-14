@@ -10,12 +10,18 @@ from users.views import (
     TaskListView,
     CompanyUsersView,  # <-- You'll create this in views.py
 )
+from rest_framework.routers import DefaultRouter
+from tasks.views import ProjectViewSet, TaskViewSet
 from users.views import CustomTokenObtainPairView
 from users.views import DeleteUserView
 
 from rest_framework_simplejwt.views import TokenRefreshView
 def home(request):
     return JsonResponse({"message": "API is running"})
+
+router = DefaultRouter()
+router.register(r'projects', ProjectViewSet)
+router.register(r'tasks', TaskViewSet)
 
 urlpatterns = [
     path('', home),
@@ -43,4 +49,7 @@ urlpatterns = [
 
     # Funding Suggestor
      path('api/funding/', include('funding_suggestor.urls')),
+
+     # Tasks API
+        path('api/', include(router.urls)),
 ]

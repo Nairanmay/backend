@@ -29,7 +29,7 @@ INSTALLED_APPS = [
     'users',  # Your custom app
      'pitchdeck', 
      'funding_suggestor',
-
+    'tasks',  # Your tasks app
 ]
 
 MIDDLEWARE = [
