@@ -52,5 +52,5 @@ urlpatterns = [
 
      # Tasks API
       path('api/task', include('tasks.urls')),  # include the app urls here
-      
+          path('api/', include(router.urls)),
 ]
