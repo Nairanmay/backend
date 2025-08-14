@@ -51,5 +51,6 @@ urlpatterns = [
      path('api/funding/', include('funding_suggestor.urls')),
 
      # Tasks API
-        path('api/', include(router.urls)),
+      path('api/task', include('tasks.urls')),  # include the app urls here
+      
 ]
