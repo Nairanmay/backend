@@ -25,6 +25,11 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     # ✅ Admin sets if document is required
+
+   
+    
+    document = models.FileField(upload_to="task_docs/", null=True, blank=True)
+    admin_checked = models.BooleanField(default=False)
     requires_document = models.BooleanField(default=False)
 
     # ✅ Employee uploads one document (if required)
