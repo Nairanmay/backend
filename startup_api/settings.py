@@ -147,3 +147,6 @@ SIMPLE_JWT = {
 }
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Media files (for document uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

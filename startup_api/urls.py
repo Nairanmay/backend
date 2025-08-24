@@ -14,6 +14,8 @@ from rest_framework.routers import DefaultRouter
 from tasks.views import ProjectViewSet, TaskViewSet
 from users.views import CustomTokenObtainPairView
 from users.views import DeleteUserView
+from django.conf import settings
+from django.conf.urls.static import static
 
 from rest_framework_simplejwt.views import TokenRefreshView
 def home(request):
@@ -54,3 +56,5 @@ urlpatterns = [
       path('api/task', include('tasks.urls')),  # include the app urls here
           path('api/', include(router.urls)),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
