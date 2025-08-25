@@ -3,12 +3,12 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.core.mail import send_mail
-from django.core.files.base import ContentFile
+# from django.core.mail import send_mail
 from django.conf import settings
 
 from .models import Project, Task
 from .serializers import ProjectSerializer, TaskSerializer
+
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
@@ -40,6 +40,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             })
         return Response(data)
 
+
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -52,10 +53,10 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Task.objects.all()
         return Task.objects.filter(assigned_to=user)
 
-    # def perform_create(self, serializer):
-    #     task = serializer.save()
-    #     emails = [u.email for u in task.assigned_to.all() if u.email]
-    #     # if emails:
+    def perform_create(self, serializer):
+        task = serializer.save()
+        # emails = [u.email for u in task.assigned_to.all() if u.email]
+        # if emails:
         #     send_mail(
         #         subject=f"New Task Assigned: {task.project.name}",
         #         message=f"You have been assigned a new task: {task.description}",
@@ -66,14 +67,9 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         task = serializer.save()
-        if task.status.lower() == "completed":
-            if task.requires_document and not task.document:
-                dummy_content = ContentFile(
-                    b"Document automatically generated on task completion",
-                    name=f"task_{task.id}_document.txt"
-                )
-                task.document.save(dummy_content.name, dummy_content, save=True)
 
+        # Notify admin if completed
+        if task.status.lower() == "completed":
             # send_mail(
             #     subject=f"Task Completed: {task.project.name}",
             #     message=f"The task '{task.description}' has been completed.",
@@ -82,9 +78,32 @@ class TaskViewSet(viewsets.ModelViewSet):
             #     fail_silently=True,
             # )
 
+            pass  # Email notifications commented out
+
     # Admin view of all uploaded documents
     @action(detail=False, methods=["get"], permission_classes=[IsAdminUser])
     def uploaded_docs(self, request):
         tasks_with_docs = Task.objects.filter(document__isnull=False)
         serializer = self.get_serializer(tasks_with_docs, many=True)
         return Response(serializer.data)
+
+    # Manual document upload
+    @action(detail=True, methods=["post"], url_path="upload-document")
+    def upload_document(self, request, pk=None):
+        task = self.get_object()
+
+        if not task.requires_document:
+            return Response(
+                {"error": "This task does not require a document."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        file = request.FILES.get("document")
+        if not file:
+            return Response(
+                {"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        task.document = file
+        task.save()
+        return Response({"message": "Document uploaded successfully."}, status=200)
