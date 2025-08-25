@@ -59,3 +59,11 @@ class TaskSerializer(serializers.ModelSerializer):
         if assigned_users is not None:
             instance.assigned_to.set(assigned_users)
         return super().update(instance, validated_data)
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    tasks = TaskSerializer(many=True, read_only=True)  # ✅ Include tasks
+
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'type', 'deadline', 'tasks']
