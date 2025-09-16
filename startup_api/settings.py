@@ -30,6 +30,7 @@ INSTALLED_APPS = [
      'pitchdeck', 
      'funding_suggestor',
     'tasks',  # Your tasks app
+     'captable',
 ]
 
 MIDDLEWARE = [

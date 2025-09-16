@@ -55,6 +55,8 @@ urlpatterns = [
      # Tasks API
       path('api/task', include('tasks.urls')),  # include the app urls here
           path('api/', include(router.urls)),
+
+          path('api/captable/', include('captable.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
