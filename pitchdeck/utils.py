@@ -50,12 +50,23 @@ Pitch Deck Text:
 \"\"\"
 """
 
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
-    response = model.generate_content(prompt)
-    print("Raw AI output:", response.text)
+    # Use a valid model from your account (replace with one from list_models)
+    model_name = "models/gemini-flash-latest"
+
+    # Call text generation endpoint
+    response = genai.text.generate(
+        model=model_name,
+        prompt=prompt,
+        temperature=0.7,
+        max_output_tokens=500
+    )
+
+    # The generated text is in response.result[0].content[0].text
+    raw_text = response.result[0].content[0].text
+    print("Raw AI output:", raw_text)
 
     # Clean markdown code blocks if present
-    cleaned_text = re.sub(r"```json|```", "", response.text).strip()
+    cleaned_text = re.sub(r"```json|```", "", raw_text).strip()
 
     try:
         match = re.search(r"\{.*\}", cleaned_text, re.DOTALL)
@@ -63,7 +74,7 @@ Pitch Deck Text:
             json_str = match.group()
             result = json.loads(json_str)
 
-            # Ensure keys exist and have defaults if missing
+            # Ensure keys exist
             result.setdefault("summary", "")
             result.setdefault("strengths", [])
             result.setdefault("weaknesses", [])
