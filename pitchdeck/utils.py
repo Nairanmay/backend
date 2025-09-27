@@ -1,131 +1,90 @@
 import os
-import fitz  # PyMuPDF
-import google.generativeai as genai
 import json
-import re
-from dotenv import load_dotenv
+import google.generativeai as genai
+from PyPDF2 import PdfReader
 
-# -------------------------------
-# Load environment variables
-# -------------------------------
-load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# ----------------------------
+# 1. Configure Gemini API
+# ----------------------------
+API_KEY = os.getenv("GEMINI_API_KEY")  # Make sure you set this in your environment
+if not API_KEY:
+    raise ValueError("❌ Please set your GEMINI_API_KEY environment variable")
 
-if not GEMINI_API_KEY:
-    raise ValueError(
-        "❌ GEMINI_API_KEY is not set. Please add it to your .env file.\n"
-        "Example: GEMINI_API_KEY=your_api_key_here"
-    )
+genai.configure(api_key=API_KEY)
 
-genai.configure(api_key=GEMINI_API_KEY)
-
-# -------------------------------
-# PDF Text Extraction
-# -------------------------------
-def extract_text_from_pdf(pdf_file_path):
-    """
-    Extract all text from PDF using PyMuPDF.
-    pdf_file_path: path to PDF file
-    """
+# ----------------------------
+# 2. Extract text from PDF
+# ----------------------------
+def extract_text_from_pdf(pdf_path):
+    """Extracts all text from a PDF file."""
+    reader = PdfReader(pdf_path)
     text = ""
-    with fitz.open(pdf_file_path) as doc:
-        for page in doc:
-            text += page.get_text()
-    return text
+    for page in reader.pages:
+        text += page.extract_text() or ""
+    return text.strip()
 
-# -------------------------------
-# Gemini Analysis
-# -------------------------------
+# ----------------------------
+# 3. Analyze text with Gemini
+# ----------------------------
 def analyze_with_gemini(text):
-    """
-    Sends extracted text to Gemini and returns parsed JSON analysis.
-    """
+    """Sends text to Gemini for structured analysis."""
+    model = genai.GenerativeModel("gemini-1.5-flash")
+
     prompt = f"""
-You are a startup pitch deck analyzer. Analyze the following pitch deck text strictly.
+    You are analyzing a startup pitch deck. 
+    Extract key information and return it as JSON with the following fields:
 
-Provide ONLY a JSON object with the following keys (no extra text or explanation):
+    {{
+        "startup_name": string,
+        "problem_statement": string,
+        "solution": string,
+        "business_model": string,
+        "target_market": string,
+        "competition": string,
+        "traction": string,
+        "team": string,
+        "financials": string,
+        "funding_request": string,
+        "strengths": [list of strings],
+        "weaknesses": [list of strings]
+    }}
 
-1. summary (string): A clear and concise summary.
-2. strengths (array of strings): List key strengths.
-3. weaknesses (array of strings): List key weaknesses.
-4. ratings (object): Ratings on a scale of 1-10 with keys: market_potential, team_strength, clarity.
-5. suggestions (array of strings): Concrete suggestions for improvement.
+    Text to analyze:
+    {text}
+    """
 
-Pitch Deck Text:
-\"\"\"
-{text}
-\"\"\"
-"""
+    response = model.generate_content(prompt)
 
-    # Use a valid model from your account
-    model_name = "models/gemini-flash-latest"
-
-    # Create GenerativeModel object
-    model = genai.GenerativeModel(model_name)
-
-    # Generate content
-    response = model.generate(
-        prompt=prompt,
-        temperature=0.7,
-        max_output_tokens=700
-    )
-
-    raw_text = response.text
-    print("Raw AI output:\n", raw_text)
-
-    # Remove markdown code blocks if present
-    cleaned_text = re.sub(r"```json|```", "", raw_text).strip()
-
-    # Parse JSON safely
     try:
-        match = re.search(r"\{.*\}", cleaned_text, re.DOTALL)
-        if match:
-            json_str = match.group()
-            result = json.loads(json_str)
+        # Try to parse model output as JSON
+        return json.loads(response.text)
+    except json.JSONDecodeError:
+        # If model didn’t output valid JSON, return raw text
+        return {"raw_response": response.text}
 
-            # Ensure all keys exist
-            result.setdefault("summary", "")
-            result.setdefault("strengths", [])
-            result.setdefault("weaknesses", [])
-            result.setdefault("ratings", {
-                "market_potential": 0,
-                "team_strength": 0,
-                "clarity": 0,
-            })
-            result.setdefault("suggestions", [])
-
-        else:
-            raise ValueError("No JSON object found in AI response")
-
-    except Exception as e:
-        print("JSON parse error:", str(e))
-        result = {
-            "summary": cleaned_text,
-            "strengths": [],
-            "weaknesses": [],
-            "ratings": {
-                "market_potential": 0,
-                "team_strength": 0,
-                "clarity": 0,
-            },
-            "suggestions": [],
-            "error": f"Failed to parse JSON: {str(e)}"
-        }
-
-    return result
-
-# -------------------------------
-# Example Usage
-# -------------------------------
+# ----------------------------
+# 4. Main program
+# ----------------------------
 if __name__ == "__main__":
-    pdf_path = "example_pitch_deck.pdf"  # Replace with your PDF file path
+    # Ask user for PDF path
+    pdf_path = input("📂 Enter the path to your pitch deck PDF: ").strip()
 
     if not os.path.exists(pdf_path):
-        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+        raise FileNotFoundError(f"❌ PDF file not found: {pdf_path}")
 
+    print("⏳ Extracting text from PDF...")
     pdf_text = extract_text_from_pdf(pdf_path)
+
+    print("⏳ Analyzing with Gemini...")
     analysis = analyze_with_gemini(pdf_text)
 
-    # Print formatted JSON
+    # Print result
     print("\n--- Parsed Analysis ---")
-    print(json.dumps(analysis, indent=4))
+    print(json.dumps(analysis, indent=4, ensure_ascii=False))
+
+    # Save JSON file
+    output_file = os.path.splitext(pdf_path)[0] + "_analysis.json"
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(analysis, f, indent=4, ensure_ascii=False)
+
+    print(f"\n✅ Analysis saved to {output_file}")
