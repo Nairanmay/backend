@@ -2,13 +2,13 @@ import os
 import fitz  # PyMuPDF
 import google.generativeai as genai
 import json
-import re
 from dotenv import load_dotenv
+import re
 
-# -------------------------------
-# Load environment variables
-# -------------------------------
+# ✅ Load environment variables from .env
 load_dotenv()
+
+# ✅ Configure Gemini API key
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not GEMINI_API_KEY:
@@ -19,27 +19,20 @@ if not GEMINI_API_KEY:
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-# -------------------------------
-# PDF Text Extraction
-# -------------------------------
+
 def extract_text_from_pdf(pdf_file):
-    """
-    Extract all text from PDF using PyMuPDF.
-    pdf_file: file-like object opened in 'rb' mode
-    """
+    """Extract all text from PDF using PyMuPDF."""
     text = ""
     with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
         for page in doc:
             text += page.get_text()
     return text
 
-# -------------------------------
-# Gemini Analysis
-# -------------------------------
+
+import json
+import re
+
 def analyze_with_gemini(text):
-    """
-    Sends extracted text to Gemini and returns parsed JSON analysis.
-    """
     prompt = f"""
 You are a startup pitch deck analyzer. Analyze the following pitch deck text strictly.
 
@@ -57,34 +50,30 @@ Pitch Deck Text:
 \"\"\"
 """
 
-    # -------------------------------
-    # Use a valid model from your account
-    # -------------------------------
-    model_name = "models/gemini-flash-latest"
+    model_name = "models/gemini-flash-latest"  # ✅ Use a valid model from your list
 
-    # Generate content via chat.completions.create
+    # Use chat.completions.create() for text generation
     response = genai.chat.completions.create(
         model=model_name,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
-        max_output_tokens=700
+        max_output_tokens=500
     )
 
-    # Extract raw text from AI response
+    # Extract the AI's response
     raw_text = response.choices[0].message.content
-    print("Raw AI output:\n", raw_text)
+    print("Raw AI output:", raw_text)
 
-    # Remove markdown code blocks if present
+    # Clean markdown code blocks if present
     cleaned_text = re.sub(r"```json|```", "", raw_text).strip()
 
-    # Parse JSON safely
     try:
         match = re.search(r"\{.*\}", cleaned_text, re.DOTALL)
         if match:
             json_str = match.group()
             result = json.loads(json_str)
 
-            # Ensure all keys exist
+            # Ensure keys exist
             result.setdefault("summary", "")
             result.setdefault("strengths", [])
             result.setdefault("weaknesses", [])
@@ -114,18 +103,3 @@ Pitch Deck Text:
         }
 
     return result
-
-# -------------------------------
-# Example Usage
-# -------------------------------
-if __name__ == "__main__":
-    pdf_path = "example_pitch_deck.pdf"  # Replace with your PDF file path
-
-    with open(pdf_path, "rb") as f:
-        pdf_text = extract_text_from_pdf(f)
-
-    analysis = analyze_with_gemini(pdf_text)
-
-    # Print formatted JSON
-    print("\n--- Parsed Analysis ---")
-    print(json.dumps(analysis, indent=4))
