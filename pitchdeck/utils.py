@@ -22,13 +22,13 @@ genai.configure(api_key=GEMINI_API_KEY)
 # -------------------------------
 # PDF Text Extraction
 # -------------------------------
-def extract_text_from_pdf(pdf_file):
+def extract_text_from_pdf(pdf_file_path):
     """
     Extract all text from PDF using PyMuPDF.
-    pdf_file: file-like object opened in 'rb' mode
+    pdf_file_path: path to PDF file
     """
     text = ""
-    with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
+    with fitz.open(pdf_file_path) as doc:
         for page in doc:
             text += page.get_text()
     return text
@@ -57,21 +57,20 @@ Pitch Deck Text:
 \"\"\"
 """
 
-    # -------------------------------
     # Use a valid model from your account
-    # -------------------------------
     model_name = "models/gemini-flash-latest"
 
-    # Generate content via chat.completions.create
-    response = genai.chat.completions.create(
-        model=model_name,
-        messages=[{"role": "user", "content": prompt}],
+    # Create GenerativeModel object
+    model = genai.GenerativeModel(model_name)
+
+    # Generate content
+    response = model.generate(
+        prompt=prompt,
         temperature=0.7,
         max_output_tokens=700
     )
 
-    # Extract raw text from AI response
-    raw_text = response.choices[0].message.content
+    raw_text = response.text
     print("Raw AI output:\n", raw_text)
 
     # Remove markdown code blocks if present
@@ -121,9 +120,10 @@ Pitch Deck Text:
 if __name__ == "__main__":
     pdf_path = "example_pitch_deck.pdf"  # Replace with your PDF file path
 
-    with open(pdf_path, "rb") as f:
-        pdf_text = extract_text_from_pdf(f)
+    if not os.path.exists(pdf_path):
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
+    pdf_text = extract_text_from_pdf(pdf_path)
     analysis = analyze_with_gemini(pdf_text)
 
     # Print formatted JSON
