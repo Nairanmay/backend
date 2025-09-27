@@ -50,7 +50,7 @@ Pitch Deck Text:
 \"\"\"
 """
 
-    model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
+    model = genai.GenerativeModel("gemini-1.5-flash-latest")
     response = model.generate_content(prompt)
     print("Raw AI output:", response.text)
 

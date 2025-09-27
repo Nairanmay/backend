@@ -10,6 +10,6 @@ if not api_key:
 
 genai.configure(api_key=api_key)
 
-model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
 response = model.generate_content('Say hello in JSON: {"greeting":"Hello world"}')
 print(response.text)
