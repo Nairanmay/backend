@@ -30,12 +30,14 @@ def get_funding_suggestion_from_ai(company_type: str, company_phase: str, funds_
     (investor_type, equity_to_dilute, explanation)
     """
     prompt = (
-        f"You are an expert startup funding advisor.\n"
-        f"A {company_phase} phase {company_type} company requires ₹{funds_required}.\n"
-        "Respond ONLY with valid JSON, using exactly these keys:\n"
-        '{"investor_type": string, "equity_to_dilute": number, "explanation": string}\n'
-        "Do not include markdown, extra text, or explanations outside JSON."
-    )
+    f"You are an expert startup funding advisor.\n"
+    f"A {company_phase} phase {company_type} company requires ₹{funds_required}.\n"
+    "Respond ONLY with valid JSON, using exactly these keys:\n"
+    '{"investor_type": string, "equity_to_dilute": number, "explanation": string}\n'
+    "Do not include markdown, extra text, or explanations outside JSON.\n"
+    "The explanation should be very detailed and elaborate, including reasoning, risks, "
+    "benefits, and examples if possible."
+)
 
     ai_text = call_gemini_model(prompt)
 
