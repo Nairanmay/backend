@@ -28,7 +28,7 @@ def extract_text_from_pdf(pdf_path):
 # ----------------------------
 def analyze_with_gemini(text):
     """Sends text to Gemini for structured analysis."""
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel(model_name="gemini-2.5-flash")
 
     prompt = f"""
     You are analyzing a startup pitch deck. 
