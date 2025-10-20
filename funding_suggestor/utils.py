@@ -2,6 +2,7 @@ import os
 import re
 import json
 import google.generativeai as genai
+from django.conf import settings
 
 # ✅ Configure Gemini API (make sure GEMINI_API_KEY is set in Render environment)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -15,19 +16,14 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 def call_gemini_model(prompt: str) -> str:
     """
-    Calls the Gemini 1.5 Pro model to generate structured funding advice.
+    Calls Gemini 1.5 Pro (v1 API) to generate structured funding advice.
     """
     try:
-        model = genai.GenerativeModel("gemini-1.5-pro")
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        # Use the v1 version explicitly
+        model = genai.GenerativeModel(model_name="models/gemini-1.5-pro")
         response = model.generate_content(prompt)
-
-        # Safely extract text
-        if hasattr(response, "text") and response.text:
-            return response.text.strip()
-        elif isinstance(response, str):
-            return response.strip()
-        else:
-            raise ValueError("Empty response from Gemini model.")
+        return response.text.strip() if hasattr(response, "text") else str(response).strip()
     except Exception as e:
         raise RuntimeError(f"Gemini API error: {str(e)}")
 
