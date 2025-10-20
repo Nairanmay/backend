@@ -16,18 +16,15 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 def call_gemini_model(prompt: str) -> str:
     """
-    Calls Gemini 1.5 Pro (v1 API) to generate structured funding advice.
+    Calls Gemini 1.5 Flash (free) to generate structured funding advice.
     """
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        # Use the v1 version explicitly
-        model = genai.GenerativeModel(model_name="models/gemini-1.5-pro")
+        model = genai.GenerativeModel(model_name="gemini-1.5-flash")  # <-- change here
         response = model.generate_content(prompt)
         return response.text.strip() if hasattr(response, "text") else str(response).strip()
     except Exception as e:
         raise RuntimeError(f"Gemini API error: {str(e)}")
-
-
 def get_funding_suggestion_from_ai(company_type: str, company_phase: str, funds_required: str):
     """
     Generates funding suggestions from Gemini model and returns
