@@ -7,7 +7,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
 def call_gemini_model(prompt: str) -> str:
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
+    model = genai.GenerativeModel("gemini-1.5-flash") # Removed "-latest"
     response = model.generate_content(prompt)
     return response.text
 
