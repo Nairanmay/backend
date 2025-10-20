@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import google.generativeai as genai
 from PyPDF2 import PdfReader
@@ -6,7 +7,7 @@ from PyPDF2 import PdfReader
 # ----------------------------
 # 1. Configure Gemini API
 # ----------------------------
-API_KEY = os.getenv("GEMINI_API_KEY")  # Make sure you set this in your environment
+API_KEY = os.getenv("GEMINI_API_KEY")  # Make sure this is set in your environment
 if not API_KEY:
     raise ValueError("❌ Please set your GEMINI_API_KEY environment variable")
 
@@ -16,7 +17,7 @@ genai.configure(api_key=API_KEY)
 # 2. Extract text from PDF
 # ----------------------------
 def extract_text_from_pdf(pdf_path):
-    """Extracts all text from a PDF file."""
+    """Extract all text from a PDF file."""
     reader = PdfReader(pdf_path)
     text = ""
     for page in reader.pages:
@@ -27,12 +28,18 @@ def extract_text_from_pdf(pdf_path):
 # 3. Analyze text with Gemini
 # ----------------------------
 def analyze_with_gemini(text):
-    """Sends text to Gemini for structured analysis."""
+    """
+    Sends text to Gemini for structured analysis.
+    Returns a Python dictionary with parsed JSON output.
+    """
     model = genai.GenerativeModel(model_name="gemini-2.5-flash")
 
     prompt = f"""
-    You are analyzing a startup pitch deck. 
-    Extract key information and return it as JSON with the following fields:
+    You are an expert startup analyst.
+    Extract key information from the following pitch deck text and return it as JSON.
+    Make the explanation sections long and detailed (3-4 sentences each).
+
+    Fields to include:
 
     {{
         "startup_name": string,
@@ -49,24 +56,26 @@ def analyze_with_gemini(text):
         "weaknesses": [list of strings]
     }}
 
-    Text to analyze:
+    Pitch deck text:
     {text}
     """
 
     response = model.generate_content(prompt)
 
+    # Clean possible markdown/code formatting
+    raw_text = response.text.strip() if hasattr(response, "text") else str(response)
+    cleaned_text = re.sub(r"^```(?:json)?|```$", "", raw_text, flags=re.MULTILINE).strip()
+
     try:
-        # Try to parse model output as JSON
-        return json.loads(response.text)
+        return json.loads(cleaned_text)
     except json.JSONDecodeError:
-        # If model didn’t output valid JSON, return raw text
-        return {"raw_response": response.text}
+        # Fallback: wrap raw response
+        return {"raw_response": cleaned_text}
 
 # ----------------------------
 # 4. Main program
 # ----------------------------
 if __name__ == "__main__":
-    # Ask user for PDF path
     pdf_path = input("📂 Enter the path to your pitch deck PDF: ").strip()
 
     if not os.path.exists(pdf_path):
