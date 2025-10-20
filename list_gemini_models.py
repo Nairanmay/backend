@@ -1,10 +1,13 @@
+# list_gemini_models.py
 import google.generativeai as genai
 
-genai.configure(api_key="AIzaSyA2R3KxBZ0dQp97a6_-t0M1KssTalRLIb4")
+genai.configure(api_key="AIzaSyBIBdb98IbeMRgb3G00u7q5DEPN2Mh3bPI")
 
-response = genai.generate_content(
-    model="models/gemini-flash-latest",  # Use a valid model from your list
-    prompt="Write a short story about a startup founder."
-)
-
-print(response.result)
+try:
+    models = genai.list_models()
+    print("Models available for your key:")
+    for m in models:
+        # Just print the model name
+        print(m.name)
+except Exception as e:
+    print("Error:", e)
