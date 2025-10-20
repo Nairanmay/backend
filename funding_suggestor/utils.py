@@ -7,7 +7,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
 def call_gemini_model(prompt: str) -> str:
-    model = genai.GenerativeModel("gemini-pro") # Use this one
+    model = genai.GenerativeModel("gemini-1.0-pro") # Use this explicit version
     response = model.generate_content(prompt)
     return response.text
 
