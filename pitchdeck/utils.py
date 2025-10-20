@@ -30,16 +30,17 @@ def extract_text_from_pdf(pdf_path):
 def analyze_with_gemini(text):
     """
     Sends text to Gemini for structured analysis.
-    Returns a Python dictionary with parsed JSON output.
+    Returns a Python dictionary with parsed JSON output including suggestions and ratings.
     """
     model = genai.GenerativeModel(model_name="gemini-2.5-flash")
 
     prompt = f"""
     You are an expert startup analyst.
     Extract key information from the following pitch deck text and return it as JSON.
-    Make the explanation sections long and detailed (3-4 sentences each).
+    Make explanations detailed (3-4 sentences each).
+    Also include actionable "suggestions" for improvement (list of strings) and "ratings" for main sections (1-10).
 
-    Fields to include:
+    JSON schema to return:
 
     {{
         "startup_name": string,
@@ -53,7 +54,15 @@ def analyze_with_gemini(text):
         "financials": string,
         "funding_request": string,
         "strengths": [list of strings],
-        "weaknesses": [list of strings]
+        "weaknesses": [list of strings],
+        "suggestions": [list of strings],
+        "ratings": {{
+            "problem_statement": number,
+            "solution": number,
+            "team": number,
+            "market": number,
+            "business_model": number
+        }}
     }}
 
     Pitch deck text:
