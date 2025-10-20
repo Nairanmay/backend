@@ -1,58 +1,82 @@
-import google.generativeai as genai
 import os
-import json
 import re
+import json
+import google.generativeai as genai
 
 # ✅ Configure Gemini API (make sure GEMINI_API_KEY is set in Render environment)
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    raise EnvironmentError(
+        "❌ Missing GEMINI_API_KEY. Please set it in Render environment variables."
+    )
+
+genai.configure(api_key=GEMINI_API_KEY)
 
 def call_gemini_model(prompt: str) -> str:
     """
-    Calls Gemini 1.5 Pro to generate a structured JSON suggestion.
+    Calls the Gemini 1.5 Pro model to generate structured funding advice.
     """
-    # Use latest model (v1, not v1beta)
-    model = genai.GenerativeModel("gemini-1.5-pro")
+    try:
+        model = genai.GenerativeModel("gemini-1.5-pro")
+        response = model.generate_content(prompt)
 
-    # Generate content safely
-    response = model.generate_content(prompt)
+        # Safely extract text
+        if hasattr(response, "text") and response.text:
+            return response.text.strip()
+        elif isinstance(response, str):
+            return response.strip()
+        else:
+            raise ValueError("Empty response from Gemini model.")
+    except Exception as e:
+        raise RuntimeError(f"Gemini API error: {str(e)}")
 
-    # Return model text safely
-    return response.text.strip() if hasattr(response, "text") else str(response)
 
-def get_funding_suggestion_from_ai(company_type, company_phase, funds_required):
+def get_funding_suggestion_from_ai(company_type: str, company_phase: str, funds_required: str):
     """
-    Generates funding suggestions from Gemini model.
+    Generates funding suggestions from Gemini model and returns
+    (investor_type, equity_to_dilute, explanation)
     """
     prompt = (
         f"You are an expert startup funding advisor.\n"
         f"A {company_phase} phase {company_type} company requires ₹{funds_required}.\n"
         "Respond ONLY with valid JSON, using exactly these keys:\n"
         '{"investor_type": string, "equity_to_dilute": number, "explanation": string}\n'
-        "No extra text, no markdown.\n"
+        "Do not include markdown, extra text, or explanations outside JSON.\n"
     )
 
     ai_text = call_gemini_model(prompt)
 
-    # Remove code fences or formatting
+    # 🔹 Clean up possible markdown/code formatting
     cleaned_text = ai_text.strip("` \n")
 
     try:
-        # Try parsing directly
+        # Try direct JSON parsing
         result = json.loads(cleaned_text)
     except json.JSONDecodeError:
-        # Fallback: find JSON inside text
-        match = re.search(r"\{[^{}]+\}", cleaned_text, re.DOTALL)
+        # Try to find JSON object inside the text
+        match = re.search(r"\{.*\}", cleaned_text, re.DOTALL)
         if not match:
-            raise ValueError(f"Invalid AI output: {cleaned_text}")
-        result = json.loads(match.group())
+            raise ValueError(f"Invalid AI output (no JSON found): {cleaned_text}")
+        try:
+            result = json.loads(match.group())
+        except Exception:
+            raise ValueError(f"Invalid JSON extracted: {match.group()}")
 
-    # Extract and sanitize fields
-    investor_type = result.get("investor_type", "Unknown")
+    # 🔹 Extract and sanitize values
+    investor_type = str(result.get("investor_type", "Unknown")).strip()
+
     raw_equity = str(result.get("equity_to_dilute", "0")).replace("%", "").strip()
     try:
         equity_to_dilute = float(re.findall(r"[\d.]+", raw_equity)[0])
     except (IndexError, ValueError):
         equity_to_dilute = 0.0
-    explanation = result.get("explanation", "")
+
+    explanation = str(result.get("explanation", "")).strip()
 
     return investor_type, equity_to_dilute, explanation
+
+
+# ✅ Optional: Test function locally
+if __name__ == "__main__":
+    print(get_funding_suggestion_from_ai("AI startup", "seed", "5000000"))
