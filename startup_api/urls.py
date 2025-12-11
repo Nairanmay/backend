@@ -59,7 +59,8 @@ urlpatterns = [
           path('api/captable/', include('captable.urls')),
 
           path('api/documents/', include('document_hub.urls')),
-          path('api/company-profile/', include('company_profile.urls')),
+          path('api/company-profile/', include('company_profile.urls')), # <--- ADD THIS LINE
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
