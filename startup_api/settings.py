@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'tasks',  # Your tasks app
      'captable',
      'document_hub',
+     'company_profile',
 ]
 
 MIDDLEWARE = [
