@@ -31,6 +31,7 @@ INSTALLED_APPS = [
      'funding_suggestor',
     'tasks',  # Your tasks app
      'captable',
+     'document_hub',
 ]
 
 MIDDLEWARE = [

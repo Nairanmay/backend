@@ -57,6 +57,8 @@ urlpatterns = [
           path('api/', include(router.urls)),
 
           path('api/captable/', include('captable.urls')),
+
+          path('api/documents/', include('document_hub.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
