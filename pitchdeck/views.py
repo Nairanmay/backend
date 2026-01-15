@@ -11,6 +11,18 @@ class PitchDeckAnalysisView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
+    def get(self, request, *args, **kwargs):
+        """
+        Retrieve the latest pitch deck analysis for the logged-in user.
+        """
+        try:
+            # Get the latest analysis object created by this user
+            latest_analysis = PitchDeckAnalysis.objects.filter(user=request.user).latest('id')
+            serializer = PitchDeckAnalysisSerializer(latest_analysis)
+            return Response(serializer.data)
+        except PitchDeckAnalysis.DoesNotExist:
+            return Response({"error": "No pitch deck analysis found."}, status=status.HTTP_404_NOT_FOUND)
+
     def post(self, request, *args, **kwargs):
         if not hasattr(request.user, "role") or request.user.role != "admin":
             return Response(
@@ -27,8 +39,7 @@ class PitchDeckAnalysisView(APIView):
         try:
             text = extract_text_from_pdf(pdf_file)
             analysis_result = analyze_with_gemini(text)
-            print("Analysis Result:", analysis_result)  # Debug
-
+            
             pitch = PitchDeckAnalysis.objects.create(
                 user=request.user,
                 file=pdf_file,
@@ -37,7 +48,7 @@ class PitchDeckAnalysisView(APIView):
                 weaknesses=analysis_result.get("weaknesses", []),
                 suggestions=analysis_result.get("suggestions", []),
                 ratings=analysis_result.get("ratings", {}),
-                chart_data={},  # Adjust as needed
+                chart_data={},  
             )
 
             serializer = PitchDeckAnalysisSerializer(pitch)
