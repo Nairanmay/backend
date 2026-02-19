@@ -1,13 +1,20 @@
 from rest_framework import serializers
-from .models import Document
+from .models import Document # (Or whatever your model is named)
 
 class DocumentSerializer(serializers.ModelSerializer):
-    uploaded_by_username = serializers.CharField(source='uploaded_by.username', read_only=True)
-    file_size = serializers.ReadOnlyField()
-    file_type = serializers.ReadOnlyField()
-    date = serializers.DateTimeField(source='uploaded_at', format="%Y-%m-%d", read_only=True)
+    # 1. Add this custom field
+    file_size = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
-        fields = ['id', 'title', 'description', 'file', 'uploaded_by_username', 'file_size', 'file_type', 'date']
-        read_only_fields = ['uploaded_by', 'company_code']
+        # 2. Make sure 'file_size' is included in your fields list
+        fields = ['id', 'title', 'description', 'file', 'file_size', 'uploaded_by', 'created_at'] 
+
+    # 3. Add this method to calculate the size in bytes
+    def get_file_size(self, obj):
+        try:
+            if obj.file and hasattr(obj.file, 'size'):
+                return obj.file.size
+        except Exception:
+            pass
+        return 0
