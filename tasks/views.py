@@ -41,17 +41,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(data)
 
 
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
-    parser_classes = (JSONParser, MultiPartParser, FormParser)
+class ProjectViewSet(viewsets.ModelViewSet):
+    serializer_class = ProjectSerializer
 
+    # THIS IS THE VITAL PART:
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
-            return Task.objects.all()
-        return Task.objects.filter(assigned_to=user)
+        if getattr(user, 'company_code', None):
+            return Project.objects.filter(company_code=user.company_code)
+        return Project.objects.none() # Block access if no company code
 
     def perform_create(self, serializer):
         task = serializer.save()
