@@ -8,7 +8,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         # 2. Make sure 'file_size' is included in your fields list
-        fields = ['id', 'title', 'description', 'file', 'file_size', 'uploaded_by', 'created_at'] 
+        fields = ['id', 'title', 'description', 'file', 'file_size', 'uploaded_by', 'uploaded_at'] 
 
     # 3. Add this method to calculate the size in bytes
     def get_file_size(self, obj):
