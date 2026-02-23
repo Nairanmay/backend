@@ -11,10 +11,13 @@ from .serializers import ProjectSerializer, TaskSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
+    # ADDED BACK: Required for DRF router to generate URLs
+    queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
 
     # --- SECURITY FIX: Filter Projects by Company Code ---
+    # This securely overrides the queryset above for actual users
     def get_queryset(self):
         user = self.request.user
         if getattr(user, 'company_code', None):
@@ -33,7 +36,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def with_tasks(self, request):
-        # SECURITY FIX: Use self.get_queryset() instead of Project.objects.all()
         projects = self.get_queryset()
         data = []
         for project in projects:
@@ -49,63 +51,41 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 
 class TaskViewSet(viewsets.ModelViewSet):
+    # ADDED BACK: Required for DRF router to generate URLs
+    queryset = Task.objects.all()
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = (JSONParser, MultiPartParser, FormParser)
 
     # --- SECURITY FIX: Filter Tasks by Company Code ---
+    # This securely overrides the queryset above for actual users
     def get_queryset(self):
         user = self.request.user
         if not getattr(user, 'company_code', None):
             return Task.objects.none()
 
-        # Isolate tasks to only those within the user's company by checking the linked project's company code.
-        # (If your Task model has its own explicit 'company_code' field, you can change this to: Task.objects.filter(company_code=user.company_code))
         company_tasks = Task.objects.filter(project__company_code=user.company_code)
 
-        # Admins/Staff see all tasks in their company, employees see only their assigned tasks
         if user.is_staff or getattr(user, 'role', '') == 'admin':
             return company_tasks
         return company_tasks.filter(assigned_to=user)
 
     def perform_create(self, serializer):
         task = serializer.save()
-        # emails = [u.email for u in task.assigned_to.all() if u.email]
-        # if emails:
-        #     send_mail(
-        #         subject=f"New Task Assigned: {task.project.name}",
-        #         message=f"You have been assigned a new task: {task.description}",
-        #         from_email=settings.DEFAULT_FROM_EMAIL,
-        #         recipient_list=emails,
-        #         fail_silently=True,
-        #     )
 
     def perform_update(self, serializer):
         task = serializer.save()
-
-        # Notify admin if completed
         if task.status.lower() == "completed":
-            # send_mail(
-            #     subject=f"Task Completed: {task.project.name}",
-            #     message=f"The task '{task.description}' has been completed.",
-            #     from_email=settings.DEFAULT_FROM_EMAIL,
-            #     recipient_list=[settings.ADMIN_EMAIL],
-            #     fail_silently=True,
-            # )
-            pass  # Email notifications commented out
+            pass  
 
-    # Admin view of all uploaded documents
     @action(detail=False, methods=["get"], permission_classes=[IsAdminUser])
     def uploaded_docs(self, request):
-        # SECURITY FIX: Use self.get_queryset() to prevent leaking other company's task docs
         tasks_with_docs = self.get_queryset().filter(document__isnull=False)
         serializer = self.get_serializer(tasks_with_docs, many=True)
         return Response(serializer.data)
 
-    # Manual document upload
     @action(detail=True, methods=["post"], url_path="upload-document")
     def upload_document(self, request, pk=None):
-        # get_object() automatically applies get_queryset(), so it is natively secure!
         task = self.get_object() 
 
         if not task.requires_document:
