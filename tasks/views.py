@@ -11,9 +11,15 @@ from .serializers import ProjectSerializer, TaskSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
+
+    # --- SECURITY FIX: Filter Projects by Company Code ---
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(user, 'company_code', None):
+            return Project.objects.filter(company_code=user.company_code)
+        return Project.objects.none()
 
     def destroy(self, request, *args, **kwargs):
         project = self.get_object()
@@ -27,7 +33,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def with_tasks(self, request):
-        projects = Project.objects.all()
+        # SECURITY FIX: Use self.get_queryset() instead of Project.objects.all()
+        projects = self.get_queryset()
         data = []
         for project in projects:
             tasks = Task.objects.filter(project=project)
@@ -41,15 +48,25 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(data)
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
-    serializer_class = ProjectSerializer
+class TaskViewSet(viewsets.ModelViewSet):
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = (JSONParser, MultiPartParser, FormParser)
 
-    # THIS IS THE VITAL PART:
+    # --- SECURITY FIX: Filter Tasks by Company Code ---
     def get_queryset(self):
         user = self.request.user
-        if getattr(user, 'company_code', None):
-            return Project.objects.filter(company_code=user.company_code)
-        return Project.objects.none() # Block access if no company code
+        if not getattr(user, 'company_code', None):
+            return Task.objects.none()
+
+        # Isolate tasks to only those within the user's company by checking the linked project's company code.
+        # (If your Task model has its own explicit 'company_code' field, you can change this to: Task.objects.filter(company_code=user.company_code))
+        company_tasks = Task.objects.filter(project__company_code=user.company_code)
+
+        # Admins/Staff see all tasks in their company, employees see only their assigned tasks
+        if user.is_staff or getattr(user, 'role', '') == 'admin':
+            return company_tasks
+        return company_tasks.filter(assigned_to=user)
 
     def perform_create(self, serializer):
         task = serializer.save()
@@ -75,20 +92,21 @@ class ProjectViewSet(viewsets.ModelViewSet):
             #     recipient_list=[settings.ADMIN_EMAIL],
             #     fail_silently=True,
             # )
-
             pass  # Email notifications commented out
 
     # Admin view of all uploaded documents
     @action(detail=False, methods=["get"], permission_classes=[IsAdminUser])
     def uploaded_docs(self, request):
-        tasks_with_docs = Task.objects.filter(document__isnull=False)
+        # SECURITY FIX: Use self.get_queryset() to prevent leaking other company's task docs
+        tasks_with_docs = self.get_queryset().filter(document__isnull=False)
         serializer = self.get_serializer(tasks_with_docs, many=True)
         return Response(serializer.data)
 
     # Manual document upload
     @action(detail=True, methods=["post"], url_path="upload-document")
     def upload_document(self, request, pk=None):
-        task = self.get_object()
+        # get_object() automatically applies get_queryset(), so it is natively secure!
+        task = self.get_object() 
 
         if not task.requires_document:
             return Response(
