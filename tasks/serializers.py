@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Project, Task
 from django.contrib.auth import get_user_model
-
+from users.models import CustomUser
 User = get_user_model()
 
 
@@ -19,53 +19,39 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ['company_code'] # Add this so the backend handles it securely
 
 class TaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Task
-        # Make sure 'company_code' is included here
-        fields = ['id', 'project', 'description', 'assigned_to', 'status', 'created_at', 'requires_document', 'document', 'admin_checked', 'company_code']
-        read_only_fields = ['company_code'] # Add this so the backend handles it securely
-
-    # ✅ Include project details instead of just ID
-    project = ProjectSerializer(read_only=True)
-    project_id = serializers.PrimaryKeyRelatedField(
-        queryset=Project.objects.all(), write_only=True, source="project"
+    # This will output the full user objects when READING data (GET)
+    assigned_to = UserSerializer(many=True, read_only=True)
+    
+    # This allows us to accept a list of IDs when WRITING data (POST/PUT)
+    assigned_to_ids = serializers.PrimaryKeyRelatedField(
+        many=True, 
+        queryset=CustomUser.objects.all(), 
+        source='assigned_to', 
+        write_only=True
     )
-
-    # ✅ Document field
-    document = serializers.FileField(required=False, allow_null=True)
+    
+    # Same trick for project, so we get the full project details on GET, but can pass an ID on POST
+    project_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
-        fields = [
-            'id',
-            'project',           # detailed project object (read-only)
-            'project_id',        # for writing (assigning project)
-            'description',
-            'assigned_to',
-            'assigned_to_ids',
-            'status',
-            'created_at',
-            'requires_document',  # ✅ new field
-            'document',
-            'admin_checked',      # ✅ new field
-        ]
+        # Make sure assigned_to_ids is in the fields list
+        fields = ['id', 'project', 'project_details', 'description', 'assigned_to', 'assigned_to_ids', 'status', 'created_at', 'requires_document', 'document', 'admin_checked', 'company_code']
+        read_only_fields = ['company_code']
 
-    def create(self, validated_data):
-        assigned_users = validated_data.pop('assigned_to_ids', [])
-        task = Task.objects.create(**validated_data)
-        task.assigned_to.set(assigned_users)
-        return task
-
-    def update(self, instance, validated_data):
-        assigned_users = validated_data.pop('assigned_to_ids', None)
-        if assigned_users is not None:
-            instance.assigned_to.set(assigned_users)
-        return super().update(instance, validated_data)
-
+    def get_project_details(self, obj):
+        return {
+            "id": obj.project.id,
+            "name": obj.project.name,
+            "type": obj.project.type,
+            "deadline": obj.project.deadline
+        }
 
 class ProjectSerializer(serializers.ModelSerializer):
-    tasks = TaskSerializer(many=True, read_only=True)  # ✅ Include tasks
+    # This will embed all the tasks inside the project payload
+    tasks = TaskSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'type', 'deadline', 'tasks']
+        fields = ['id', 'name', 'type', 'deadline', 'created_at', 'company_code', 'tasks']
+        read_only_fields = ['company_code']
