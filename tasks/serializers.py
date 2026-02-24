@@ -14,14 +14,16 @@ class UserSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['id', 'name', 'type', 'deadline']
-
+        # Make sure 'company_code' is included here
+        fields = ['id', 'name', 'type', 'deadline', 'created_at', 'company_code', 'tasks'] 
+        read_only_fields = ['company_code'] # Add this so the backend handles it securely
 
 class TaskSerializer(serializers.ModelSerializer):
-    assigned_to = UserSerializer(many=True, read_only=True)
-    assigned_to_ids = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), many=True, write_only=True
-    )
+    class Meta:
+        model = Task
+        # Make sure 'company_code' is included here
+        fields = ['id', 'project', 'description', 'assigned_to', 'status', 'created_at', 'requires_document', 'document', 'admin_checked', 'company_code']
+        read_only_fields = ['company_code'] # Add this so the backend handles it securely
 
     # ✅ Include project details instead of just ID
     project = ProjectSerializer(read_only=True)
