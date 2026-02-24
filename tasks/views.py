@@ -11,7 +11,7 @@ from .serializers import ProjectSerializer, TaskSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    # ADDED BACK: Required for DRF router to generate URLs
+    # Required for DRF router to generate URLs
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
@@ -23,6 +23,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if getattr(user, 'company_code', None):
             return Project.objects.filter(company_code=user.company_code)
         return Project.objects.none()
+
+    # --- FIX: Automatically save the admin's company code when creating a project ---
+    def perform_create(self, serializer):
+        serializer.save(company_code=self.request.user.company_code)
 
     def destroy(self, request, *args, **kwargs):
         project = self.get_object()
@@ -51,14 +55,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    # ADDED BACK: Required for DRF router to generate URLs
+    # Required for DRF router to generate URLs
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = (JSONParser, MultiPartParser, FormParser)
 
     # --- SECURITY FIX: Filter Tasks by Company Code ---
-    # This securely overrides the queryset above for actual users
     def get_queryset(self):
         user = self.request.user
         if not getattr(user, 'company_code', None):
@@ -70,8 +73,9 @@ class TaskViewSet(viewsets.ModelViewSet):
             return company_tasks
         return company_tasks.filter(assigned_to=user)
 
+    # --- FIX: Automatically save the admin's company code when creating a task ---
     def perform_create(self, serializer):
-        task = serializer.save()
+        serializer.save(company_code=self.request.user.company_code)
 
     def perform_update(self, serializer):
         task = serializer.save()
